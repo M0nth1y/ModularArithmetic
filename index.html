@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>카이사르 암호화 체험기 | 컴퓨터공학 탐구</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        mono: ['"Fira Code"', 'monospace'],
+                        sans: ['"Noto Sans KR"', 'sans-serif'],
+                    },
+                    colors: {
+                        cyber: {
+                            black: '#0a0a0c',
+                            gray: '#17181c',
+                            green: '#00ff41',
+                            darkgreen: '#008f11',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0a0a0c;
+            color: #e2e8f0;
+            background-image: radial-gradient(circle at 50% 50%, #17181c 0%, #0a0a0c 100%);
+            min-height: 100vh;
+        }
+        
+        .matrix-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.03;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" opacity="0.3"><text x="10" y="20" fill="%2300ff41" font-family="monospace">0 1</text><text x="40" y="50" fill="%2300ff41" font-family="monospace">1 0</text><text x="70" y="80" fill="%2300ff41" font-family="monospace">0 0</text></svg>');
+        }
+
+        .glow-box {
+            background-color: rgba(23, 24, 28, 0.8);
+            border: 1px solid #334155;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .glow-box:hover, .glow-input:focus {
+            border-color: #008f11;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.15);
+        }
+
+        .glow-input {
+            background-color: #0f1013;
+            border: 1px solid #334155;
+            color: #00ff41;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .cyber-btn {
+            background: linear-gradient(45deg, transparent 5%, #008f11 5%);
+            color: white;
+            box-shadow: 6px 0px 0px #00ff41;
+            transition: all 0.2s ease;
+        }
+        .cyber-btn:active {
+            box-shadow: 2px 0px 0px #00ff41;
+            transform: translateX(4px);
+        }
+        
+        /* Custom Scrollbar for textareas */
+        textarea::-webkit-scrollbar { width: 8px; }
+        textarea::-webkit-scrollbar-track { background: #0f1013; }
+        textarea::-webkit-scrollbar-thumb { background: #008f11; border-radius: 4px; }
+    </style>
+</head>
+<body class="font-sans antialiased p-4 md:p-8">
+    <div class="matrix-bg"></div>
+
+    <main class="max-w-5xl mx-auto space-y-12">
+        <header class="text-center space-y-4 pt-10 pb-6 border-b border-cyber-darkgreen/30">
+            <h1 class="text-3xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyber-green to-blue-400 font-mono tracking-tighter">
+                > 비밀을 지키는 수학_<br>
+                <span class="text-2xl md:text-3xl text-gray-300 font-sans tracking-normal mt-2 inline-block">카이사르 암호화 체험기</span>
+            </h1>
+            <p class="text-gray-400 max-w-2xl mx-auto leading-relaxed text-sm md:text-base">
+                현대 컴퓨터 보안을 지탱하는 암호학은 결국 단순한 수학에서 출발했습니다.<br>
+                로마 시대 군사 기밀을 전달하기 위해 만들어진 '카이사르 암호(Caesar Cipher)'를 통해 
+                <span class="text-cyber-green font-mono">문자열(String)</span>과 <span class="text-cyber-green font-mono">모듈러 연산(Modular Arithmetic)</span>의 관계를 탐구해 봅니다.
+            </p>
+        </header>
+
+        <section class="glow-box rounded-xl p-6 md:p-8">
+            <h2 class="text-xl font-bold text-cyber-green mb-4 font-mono">01. Theory : 모듈러 연산과 데이터의 표현</h2>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="space-y-4 text-gray-300 text-sm md:text-base">
+                    <p>
+                        컴퓨터는 문자를 직접 이해하지 못하고 숫자로 변환하여 처리합니다(예: ASCII 코드). 카이사르 암호도 마찬가지로 알파벳을 0부터 25까지의 숫자로 매핑합니다.
+                    </p>
+                    <div class="bg-[#0f1013] p-4 rounded-lg border border-gray-700">
+                        <code class="text-blue-400 block mb-2">// 핵심 암호화 공식</code>
+                        <code class="text-lg text-white font-mono flex items-center gap-2">
+                            E(x) = (x + <span class="text-cyber-green">n</span>) <span class="text-purple-400">mod</span> 26
+                        </code>
+                    </div>
+                    <ul class="list-disc list-inside space-y-2 text-gray-400">
+                        <li><strong class="text-gray-200">x:</strong> 평문의 문자 (A=0, B=1 ... Z=25)</li>
+                        <li><strong class="text-gray-200">n:</strong> 이동할 칸 수 (Shift Key)</li>
+                        <li><strong class="text-gray-200">mod 26:</strong> 26으로 나눈 나머지 연산. Z(25)를 넘어갈 경우 다시 A(0)로 돌아오게 만드는 핵심 수학 기법입니다.</li>
+                    </ul>
+                </div>
+                
+                <!-- Alphabet Visualizer -->
+                <div class="bg-[#0f1013] p-4 rounded-lg border border-gray-700 overflow-x-auto">
+                    <p class="text-xs text-gray-500 mb-2 font-mono">// Letter to Number Mapping</p>
+                    <div id="alphabet-mapping" class="grid grid-cols-13 gap-1 min-w-[400px]">
+                        <!-- JS will inject A-Z mapping here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="glow-box rounded-xl p-6 md:p-8">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                <h2 class="text-xl font-bold text-cyber-green font-mono">02. Interactive Simulator</h2>
+                
+                <div class="flex items-center gap-4 bg-[#0f1013] px-4 py-2 rounded-full border border-gray-700">
+                    <label for="shift-slider" class="text-sm text-gray-300 font-mono">Shift Key (n):</label>
+                    <input type="range" id="shift-slider" min="1" max="25" value="3" class="w-32 accent-cyber-green cursor-pointer">
+                    <span id="shift-value" class="text-cyber-green font-bold w-6 text-center font-mono">3</span>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-[1fr_auto_1fr] gap-6 items-stretch">
+                <!-- Plaintext -->
+                <div class="flex flex-col h-full">
+                    <label class="text-sm text-gray-400 mb-2 font-mono">Input: Plaintext (평문)</label>
+                    <textarea id="plaintext" class="glow-input w-full p-4 rounded-lg resize-none font-mono text-base md:text-lg text-gray-200 h-48 md:h-full" placeholder="Type secret message here... (English only)"></textarea>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col justify-center items-center gap-4 py-4 md:py-0">
+                    <button id="btn-encrypt" class="cyber-btn px-6 py-3 font-mono font-bold text-sm tracking-wider uppercase w-full md:w-32">
+                        Encrypt<br><span class="text-xs">암호화 ❯</span>
+                    </button>
+                    
+                    <!-- Dynamic Shift Visual -->
+                    <div class="flex flex-col items-center bg-[#0f1013] p-3 border border-cyber-darkgreen/50 rounded-lg">
+                        <span class="text-xs text-gray-500 mb-1 font-mono">Shift Example</span>
+                        <div class="flex items-center gap-2 font-mono text-lg font-bold">
+                            <span class="text-white">A</span>
+                            <span class="text-cyber-darkgreen">➔</span>
+                            <span id="shift-example" class="text-cyber-green">D</span>
+                        </div>
+                    </div>
+
+                    <button id="btn-decrypt" class="cyber-btn px-6 py-3 font-mono font-bold text-sm tracking-wider uppercase w-full md:w-32" style="background: linear-gradient(45deg, transparent 5%, #3b82f6 5%); box-shadow: 6px 0px 0px #60a5fa;">
+                        Decrypt<br><span class="text-xs">❮ 복호화</span>
+                    </button>
+                </div>
+
+                <!-- Ciphertext -->
+                <div class="flex flex-col h-full">
+                    <label class="text-sm text-gray-400 mb-2 font-mono">Output: Ciphertext (암호문)</label>
+                    <textarea id="ciphertext" class="glow-input w-full p-4 rounded-lg resize-none font-mono text-base md:text-lg text-cyber-green h-48 md:h-full placeholder-gray-600" placeholder="Encrypted or Decrypted result will appear here..."></textarea>
+                </div>
+            </div>
+        </section>
+
+        <section class="border-t border-gray-800 pt-8 pb-4 text-center">
+            <h3 class="text-lg text-gray-300 font-bold mb-3">암호학에서 컴퓨터 공학으로의 확장</h3>
+            <p class="text-gray-500 text-sm md:text-base max-w-3xl mx-auto leading-relaxed">
+                카이사르 암호는 빈도 분석법에 의해 쉽게 해독된다는 한계가 있습니다. 하지만 이 단순한 <strong>'데이터 변환 규칙'</strong>과 <strong>'수학적 접근'</strong>은 현대 컴퓨터 과학으로 이어졌습니다.<br><br>
+                오늘날 우리가 안전하게 웹사이트에 접속(HTTPS)하고 블록체인을 사용할 수 있는 이유는 소인수분해의 어려움을 이용한 <span class="text-blue-400">RSA 암호</span>나, 복잡한 비트 연산을 수행하는 <span class="text-blue-400">AES 알고리즘</span>이 있기 때문입니다. 컴퓨터 공학은 이처럼 수학적 상상력을 물리적 현실의 코드로 구현해 내는 학문입니다.
+            </p>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM Elements
+            const slider = document.getElementById('shift-slider');
+            const shiftValueDisplay = document.getElementById('shift-value');
+            const shiftExample = document.getElementById('shift-example');
+            const plaintextEl = document.getElementById('plaintext');
+            const ciphertextEl = document.getElementById('ciphertext');
+            const btnEncrypt = document.getElementById('btn-encrypt');
+            const btnDecrypt = document.getElementById('btn-decrypt');
+            const mappingContainer = document.getElementById('alphabet-mapping');
+
+            // --- 1. Theory Section: Generate Alphabet Mapping ---
+            function generateMapping() {
+                mappingContainer.innerHTML = '';
+                const gridClasses = "grid grid-cols-13 gap-1 text-center font-mono text-xs"; // 26 letters -> 2 rows of 13
+                
+                // Let's create two rows to fit nicely
+                const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                for (let i = 0; i < 26; i++) {
+                    const charDiv = document.createElement('div');
+                    charDiv.className = "flex flex-col items-center p-1 hover:bg-cyber-darkgreen/30 rounded transition-colors";
+                    
+                    const charSpan = document.createElement('span');
+                    charSpan.className = "text-white font-bold";
+                    charSpan.textContent = letters[i];
+                    
+                    const numSpan = document.createElement('span');
+                    numSpan.className = "text-gray-500 text-[10px]";
+                    numSpan.textContent = i;
+
+                    charDiv.appendChild(charSpan);
+                    charDiv.appendChild(numSpan);
+                    mappingContainer.appendChild(charDiv);
+                }
+            }
+            generateMapping();
+
+            // --- 2. Cipher Logic (Math) ---
+            function caesarCipher(text, shift, isDecrypt = false) {
+                // Ensure shift is positive and within 0-25
+                let s = parseInt(shift) % 26;
+                if (s < 0) s += 26; 
+                
+                // If decrypting, we reverse the shift
+                if (isDecrypt) {
+                    s = (26 - s) % 26;
+                }
+
+                let result = "";
+                for (let i = 0; i < text.length; i++) {
+                    let char = text[i];
+                    
+                    if (char.match(/[a-z]/i)) {
+                        // Get ASCII code
+                        let code = text.charCodeAt(i);
+                        
+                        // Uppercase letters
+                        if (code >= 65 && code <= 90) {
+                            // E(x) = (x + n) mod 26
+                            // charCode - 65 gives x (0 to 25). Add shift, modulo 26, add 65 back to get ASCII.
+                            char = String.fromCharCode(((code - 65 + s) % 26) + 65);
+                        }
+                        // Lowercase letters
+                        else if (code >= 97 && code <= 122) {
+                            char = String.fromCharCode(((code - 97 + s) % 26) + 97);
+                        }
+                    }
+                    result += char; // Non-alphabetic characters remain unchanged
+                }
+                return result;
+            }
+
+            // --- 3. UI Interactions & Animations ---
+            function updateShiftVisuals() {
+                const shift = slider.value;
+                shiftValueDisplay.textContent = shift;
+                
+                // Update Shift Example (A -> ?)
+                const shiftedA = caesarCipher('A', shift, false);
+                shiftExample.textContent = shiftedA;
+            }
+
+            // Hacker-like scrambling animation effect
+            function scrambleEffect(targetElement, finalString) {
+                const chars = "!<>-_\\/[]{}—=+*^?#________";
+                let iterations = 0;
+                const maxIterations = 15;
+                const intervalTime = 30; // ms
+                const originalValue = targetElement.value; // Store if needed, but we overwrite
+
+                const interval = setInterval(() => {
+                    targetElement.value = finalString.split("")
+                        .map((letter, index) => {
+                            // Keep spaces and newlines intact during scramble
+                            if(letter === ' ' || letter === '\n') return letter;
+                            
+                            if (index < iterations) {
+                                return finalString[index];
+                            }
+                            return chars[Math.floor(Math.random() * chars.length)];
+                        })
+                        .join("");
+                    
+                    // Increment iterations. Speed up slightly for longer texts.
+                    iterations += finalString.length / maxIterations > 1 ? finalString.length / maxIterations : 1;
+                    
+                    if (iterations >= finalString.length) {
+                        clearInterval(interval);
+                        targetElement.value = finalString; // Ensure absolute accuracy at the end
+                    }
+                }, intervalTime);
+            }
+
+            // Event Listeners
+            slider.addEventListener('input', updateShiftVisuals);
+
+            btnEncrypt.addEventListener('click', () => {
+                const text = plaintextEl.value;
+                if(!text.trim()) return;
+                
+                const shift = slider.value;
+                const encrypted = caesarCipher(text, shift, false);
+                
+                // Play sound or animate
+                ciphertextEl.value = ""; // clear
+                ciphertextEl.classList.remove('text-cyber-green');
+                ciphertextEl.classList.add('text-green-300'); // brighter during anim
+                
+                scrambleEffect(ciphertextEl, encrypted);
+                
+                setTimeout(() => {
+                    ciphertextEl.classList.remove('text-green-300');
+                    ciphertextEl.classList.add('text-cyber-green');
+                }, 500);
+            });
+
+            btnDecrypt.addEventListener('click', () => {
+                const text = ciphertextEl.value;
+                if(!text.trim()) return;
+
+                const shift = slider.value;
+                const decrypted = caesarCipher(text, shift, true);
+                
+                plaintextEl.value = ""; // clear
+                plaintextEl.classList.add('text-blue-300'); // color change during anim
+                
+                scrambleEffect(plaintextEl, decrypted);
+                
+                setTimeout(() => {
+                    plaintextEl.classList.remove('text-blue-300');
+                }, 500);
+            });
+
+            // Initial visual setup
+            updateShiftVisuals();
+            
+            // Add a default welcome text
+            plaintextEl.value = "HELLO COMPUTER SCIENCE\nWELCOME TO CAESAR CIPHER";
+        });
+    </script>
+</body>
+</html>
